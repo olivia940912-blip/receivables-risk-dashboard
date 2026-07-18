@@ -3,10 +3,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import data_prep as dp
 
-plt.rcParams["font.family"] = "Malgun Gothic"
+# 배포 서버(리눅스)에는 "맑은 고딕"이 없어 한글이 깨지므로, 시스템 폰트에 기대지 않고
+# 저장소에 함께 담은 나눔고딕(OFL 라이선스, fonts/NanumGothic.ttf)을 직접 등록해서 쓴다.
+FONT_PATH = Path(__file__).resolve().parent / "fonts" / "NanumGothic.ttf"
+fm.fontManager.addfont(str(FONT_PATH))
+plt.rcParams["font.family"] = fm.FontProperties(fname=str(FONT_PATH)).get_name()
 plt.rcParams["axes.unicode_minus"] = False
 
 OUTPUT_PATH = Path(__file__).resolve().parent / "output" / "01_matplotlib_부보연체비교.png"
