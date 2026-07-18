@@ -2,6 +2,7 @@
 charts/ 폴더의 차트 스크립트(각 build_fig() 함수)를 그대로 불러와 조립한다.
 모든 지표는 매번 data/ 폴더의 원본 CSV에서 다시 계산한다 (하드코딩 없음).
 """
+import importlib
 import importlib.util
 import sys
 from pathlib import Path
@@ -14,6 +15,12 @@ CHARTS_DIR = BASE_DIR / "charts"
 sys.path.insert(0, str(CHARTS_DIR))
 
 import data_prep as dp
+
+# Streamlit Cloud/로컬 모두에서 `import data_prep`은 sys.modules에 캐시된다 —
+# 배포 서버가 프로세스를 재시작하지 않고 스크립트만 재실행하면(핫리로드) 새로
+# 추가한 함수가 반영 안 된 옛 모듈 객체를 계속 쓰게 되어 AttributeError가 난다.
+# 매 실행마다 강제로 다시 읽어서 이 문제를 원천 차단한다.
+importlib.reload(dp)
 
 HAIRLINE = "#e1e0d9"
 
