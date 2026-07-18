@@ -21,7 +21,7 @@ def build_fig():
             x=g["법인명"],
             y=g["활용률"],
             name="여신한도 활용률(%)",
-            marker_color=theme.INK,
+            marker_color=theme.ACCENT,
             hovertemplate="%{x}<br>활용률: %{y:.1f}%<extra></extra>",
         ),
         secondary_y=False,

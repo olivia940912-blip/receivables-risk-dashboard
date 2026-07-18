@@ -27,7 +27,7 @@ def build_fig():
         x="구분",
         y="91일이상비중",
         color="구분",
-        color_discrete_map={"전체 고객": theme.MUTE, "미부보 고객": theme.DANGER},
+        color_discrete_map={"전체 고객": theme.ACCENT, "미부보 고객": theme.DANGER},
         text=plot_df["91일이상비중"].map(lambda v: f"{v:.1f}%"),
     )
     fig.update_traces(textposition="outside", hovertemplate="%{x}<br>91일이상비중: %{y:.1f}%<extra></extra>")

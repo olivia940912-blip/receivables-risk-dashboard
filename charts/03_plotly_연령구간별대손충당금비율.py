@@ -13,7 +13,7 @@ def build_fig():
     df["대손충당금비율_pct"] = df["대손충당금비율"] * 100
     overall = df["대손충당금_KRW"].sum() / df["채권잔액_KRW"].sum() * 100
 
-    colors = [theme.MUTE] * len(df)
+    colors = [theme.ACCENT] * len(df)
     over90_idx = df.index[df["연령구간"] == dp.OVER90_BUCKET]
     for i in over90_idx:
         colors[i] = theme.DANGER

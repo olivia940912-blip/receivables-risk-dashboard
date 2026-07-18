@@ -39,7 +39,7 @@ def build_fig():
         y="연체율",
         text="라벨",
         color=g["부보기관"] == "미부보",
-        color_discrete_map={True: theme.DANGER, False: theme.MUTE},
+        color_discrete_map={True: theme.DANGER, False: theme.ACCENT},
     )
     fig.update_traces(textposition="outside")
     fig.add_hline(y=overall, line_dash="dot", line_color=theme.INK, annotation_text=f"전체 평균 {overall:.1f}%")
