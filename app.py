@@ -54,12 +54,49 @@ double_exposure_count = len(dp.double_exposure_bonds())
 corp = dp.corp_metrics().assign(활용률_pct=lambda d: d["활용률"] * 100, 비중_pct=lambda d: d["91일이상비중"] * 100)
 bucket = dp.bond_allowance_by_bucket().assign(비율_pct=lambda d: d["대손충당금비율"] * 100)
 
+st.subheader("핵심 인사이트")
+st.caption("2025-06-30 스냅샷 기준 · 원본 CSV에서 매번 재계산 · 근거 → 해석 → 시사점")
+severity_renderer = {"critical": st.error, "warning": st.warning, "good": st.success}
+for insight in dp.key_insights():
+    render = severity_renderer.get(insight["심각도"], st.info)
+    render(
+        f"**{insight['제목']}**\n\n"
+        f"- 근거: {insight['근거']}\n"
+        f"- 해석: {insight['해석']}\n"
+        f"- 시사점: {insight['시사점']}"
+    )
+verified("위 5개 인사이트의 근거 수치는 원본 CSV 독립 재계산과 대조 완료 — verification/검증결과.md 참고")
+
+st.divider()
+
 with st.container(border=True):
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("전체 채권잔액", f"{m['총잔액_KRW'].sum() / 1e8:,.0f}억원")
     c2.metric("91일 이상 연체비중", f"{overall_ratio * 100:.1f}%")
     c3.metric("무보증 고객 수", f"{no_cover_count}사")
     c4.metric("이중 익스포저 채권 수", f"{double_exposure_count}건")
+
+with st.container(border=True):
+    st.subheader("[00] 관리 우선순위 워치리스트 TOP 10")
+    st.caption("무보증초과·부보초과잔여리스크·91일이상 과반·회수지연 30일+·이중익스포저 5개 위험 신호를 합산해 정렬한 실무 우선순위표다.")
+    watchlist = dp.priority_watchlist(10).assign(
+        총잔액=lambda d: (d["총잔액_KRW"] / 1e8).round(1),
+        활용률=lambda d: (d["활용률"] * 100).round(1),
+        연체91비중=lambda d: (d["연체91일이상비중"] * 100).round(1),
+        회수지연일수=lambda d: d["회수지연일수"].round(0).astype(int),
+    )[["고객ID", "법인명", "총잔액", "활용률", "연체91비중", "회수지연일수", "부보여부", "위험플래그수", "사유"]]
+    st.dataframe(
+        watchlist,
+        column_config={
+            "총잔액": st.column_config.NumberColumn("총잔액(억원)", format="%.1f"),
+            "활용률": st.column_config.NumberColumn("활용률(%)", format="%.1f"),
+            "연체91비중": st.column_config.NumberColumn("91일이상비중(%)", format="%.1f"),
+            "회수지연일수": st.column_config.NumberColumn("회수지연(일)"),
+            "위험플래그수": st.column_config.NumberColumn("위험신호 수"),
+        },
+        hide_index=True,
+        width="stretch",
+    )
 
 st.divider()
 
@@ -80,7 +117,7 @@ with st.container(border=True):
     st.subheader("[02] 법인별 여신한도 활용률 × 91일이상 연체비중")
     mod2 = load_module("02_plotly_법인별활용률연체비중.py")
     st.plotly_chart(mod2.build_fig(), width="stretch")
-    st.caption("활용률이 높은 법인이 연체비중도 함께 높은지 확인한다 — 두 선이 같은 방향이면 활용률 관리가 곧 연체 관리다.")
+    st.caption("활용률이 높은 법인이 연체비중도 함께 높은지 같은 %축에서 직접 비교한다 — 두 막대가 같은 방향으로 움직이지 않는다면(예: 독일법인) 활용률 관리만으로 연체를 예측할 수 없다는 뜻이다.")
     corp_sorted = corp.sort_values("활용률_pct", ascending=False)
     verified(
         " · ".join(f"{r['법인명']} {r['활용률_pct']:.1f}%/{r['비중_pct']:.1f}%" for _, r in corp_sorted.iterrows())
@@ -91,7 +128,13 @@ with st.container(border=True):
     st.subheader("[03] 연령구간별 대손충당금비율")
     mod3 = load_module("03_plotly_연령구간별대손충당금비율.py")
     st.plotly_chart(mod3.build_fig(), width="stretch")
-    st.caption("연령구간이 깊어질수록 대손충당금비율이 어떻게 증가하는지 확인한다. CLAUDE.md 기준상 91일 이상은 집합 통계 대신 개별심사 대상이다.")
+    bucket_vals = bucket.set_index("연령구간")["비율_pct"]
+    jump = bucket_vals[dp.OVER90_BUCKET] - bucket_vals["61-90일"]
+    st.caption(
+        f"61-90일({bucket_vals['61-90일']:.1f}%)에서 91일 이상({bucket_vals[dp.OVER90_BUCKET]:.1f}%)으로 "
+        f"넘어가는 순간 대손충당금비율이 {jump:.1f}%p 급증한다 — 다른 어떤 구간 전환보다 크다. "
+        "CLAUDE.md 기준상 91일 이상은 집합 통계 대신 개별심사 대상이다."
+    )
     verified(
         " · ".join(f"{r['연령구간']} {r['비율_pct']:.1f}%" for _, r in bucket.iterrows())
         + " — 원본 CSV 독립 재계산과 일치함"
@@ -102,6 +145,8 @@ with st.container(border=True):
     mod4 = load_module("04_plotly_법인별연체율.py")
     st.plotly_chart(mod4.build_fig(), width="stretch")
     corp_by_rate = corp.sort_values("비중_pct", ascending=False)
+    above_avg = corp_by_rate.loc[corp_by_rate["비중_pct"] > overall_ratio * 100, "법인명"].tolist()
+    st.caption(f"전체 평균({overall_ratio*100:.1f}%)보다 91일이상비중이 높은 법인: {', '.join(above_avg)} — 이 법인부터 회수 프로세스를 점검한다.")
     verified(
         " · ".join(f"{r['법인명']} {r['비중_pct']:.1f}%" for _, r in corp_by_rate.iterrows())
         + f" (전체 평균 {overall_ratio*100:.1f}%) — 원본 CSV 독립 재계산과 일치함"
