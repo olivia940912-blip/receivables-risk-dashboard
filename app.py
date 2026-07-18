@@ -46,16 +46,9 @@ c3.metric("무보증 고객 수", f"{no_cover_count}명")
 c4.metric("이중 익스포저 채권 수", f"{double_exposure_count}건")
 
 st.divider()
-st.subheader("① 부보여부로 본 연체 위험 — matplotlib vs Plotly 비교")
-col_mpl, col_plotly = st.columns(2)
-with col_mpl:
-    st.caption("matplotlib (정적 이미지)")
-    mpl_mod = load_module("01_matplotlib_부보연체비교.py")
-    st.pyplot(mpl_mod.build_fig())
-with col_plotly:
-    st.caption("Plotly (인터랙티브 — 마우스를 올려보세요)")
-    plotly1_mod = load_module("01_plotly_부보연체비교.py")
-    st.plotly_chart(plotly1_mod.build_fig(), width="stretch")
+st.subheader("① 부보여부로 본 연체 위험")
+plotly1_mod = load_module("01_plotly_부보연체비교.py")
+st.plotly_chart(plotly1_mod.build_fig(), width="stretch")
 st.caption("미부보 고객의 91일 이상 연체비중이 전체 평균보다 높다면, 리스크 이전 수단 부재가 연체 장기화와 함께 움직인다는 신호다.")
 over90_by_cover = m.groupby("부보여부").apply(
     lambda x: x["연체91일이상잔액_KRW"].sum() / x["총잔액_KRW"].sum() * 100
