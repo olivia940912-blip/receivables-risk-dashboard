@@ -24,7 +24,7 @@ def load_module(filename):
 
 
 st.set_page_config(page_title="해외채권 리스크 진단 대시보드", layout="wide")
-st.title("채권은 왜 안 걷히는가 — 해외채권 리스크 진단 대시보드")
+st.title("채권회수 지연사유 — 해외채권 리스크 진단 대시보드")
 
 def verified(text):
     """차트 아래에 검증된 수치를 표기한다. verification/verify_charts.py의 독립 재계산과
