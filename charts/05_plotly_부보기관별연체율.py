@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pandas as pd
 import plotly.express as px
 import data_prep as dp
+import theme
 
 MIN_SAMPLE = 10
 
@@ -38,17 +39,17 @@ def build_fig():
         y="연체율",
         text="라벨",
         color=g["부보기관"] == "미부보",
-        color_discrete_map={True: "#d64545", False: "#4a7fb5"},
+        color_discrete_map={True: theme.DANGER, False: theme.MUTE},
     )
     fig.update_traces(textposition="outside")
-    fig.add_hline(y=overall, line_dash="dot", line_color="#333", annotation_text=f"전체 평균 {overall:.1f}%")
+    fig.add_hline(y=overall, line_dash="dot", line_color=theme.INK, annotation_text=f"전체 평균 {overall:.1f}%")
     fig.update_layout(
         title="부보기관별 91일 이상 연체비중 (* = 표본 10건 미만, 참고용)",
         xaxis_title=None,
         yaxis_title="91일 이상 연체비중 (%)",
         showlegend=False,
     )
-    return fig
+    return theme.apply_theme(fig)
 
 
 if __name__ == "__main__":

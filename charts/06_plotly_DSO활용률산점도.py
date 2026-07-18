@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plotly.express as px
 import data_prep as dp
+import theme
 
 
 def build_fig():
@@ -19,17 +20,17 @@ def build_fig():
         x="DSO",
         y="활용률_pct",
         color="구분",
-        color_discrete_map={"무보증초과": "#d64545", "그 외": "#8c9aab"},
+        color_discrete_map={"무보증초과": theme.DANGER, "그 외": theme.ASH},
         log_x=True,
         hover_data={"고객ID": True, "법인명": True, "DSO": ":.0f", "활용률_pct": ":.1f", "구분": False},
     )
-    fig.add_hline(y=100, line_dash="dot", line_color="#999", annotation_text="활용률 100%")
+    fig.add_hline(y=100, line_dash="dot", line_color=theme.MUTE, annotation_text="활용률 100%")
     fig.update_layout(
         title="DSO × 여신한도 활용률 (무보증초과 강조, x축 로그 스케일)",
         xaxis_title="DSO (일, 로그축)",
         yaxis_title="여신한도 활용률 (%)",
     )
-    return fig
+    return theme.apply_theme(fig)
 
 
 if __name__ == "__main__":

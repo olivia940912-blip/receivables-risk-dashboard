@@ -5,6 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import plotly.express as px
 import data_prep as dp
+import theme
 
 
 def build_fig():
@@ -12,10 +13,10 @@ def build_fig():
     df["대손충당금비율_pct"] = df["대손충당금비율"] * 100
     overall = df["대손충당금_KRW"].sum() / df["채권잔액_KRW"].sum() * 100
 
-    colors = ["#8c9aab"] * len(df)
+    colors = [theme.MUTE] * len(df)
     over90_idx = df.index[df["연령구간"] == dp.OVER90_BUCKET]
     for i in over90_idx:
-        colors[i] = "#d64545"
+        colors[i] = theme.DANGER
 
     fig = px.bar(
         df,
@@ -27,7 +28,7 @@ def build_fig():
     fig.add_hline(
         y=overall,
         line_dash="dot",
-        line_color="#333",
+        line_color=theme.INK,
         annotation_text=f"전체 평균 {overall:.1f}%",
         annotation_position="top left",
     )
@@ -36,7 +37,7 @@ def build_fig():
         xaxis_title="연령구간",
         yaxis_title="대손충당금비율 (%)",
     )
-    return fig
+    return theme.apply_theme(fig)
 
 
 if __name__ == "__main__":
