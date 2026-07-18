@@ -3,22 +3,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import data_prep as dp
 
 
 def build_fig():
-    m = dp.customer_metrics()
-    g = m.groupby("법인명").apply(
-        lambda x: pd.Series(
-            {
-                "활용률": x["총잔액_KRW"].sum() / x["여신한도_KRW"].sum() * 100,
-                "연체91비중": x["연체91일이상잔액_KRW"].sum() / x["총잔액_KRW"].sum() * 100,
-            }
-        )
-    ).sort_values("활용률", ascending=False).reset_index()
+    corp = dp.corp_metrics()
+    g = corp.assign(활용률=corp["활용률"] * 100, 연체91비중=corp["91일이상비중"] * 100).sort_values(
+        "활용률", ascending=False
+    )
 
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(

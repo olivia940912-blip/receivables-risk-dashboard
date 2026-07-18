@@ -3,21 +3,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import pandas as pd
 import plotly.express as px
 import data_prep as dp
 
 
 def build_fig():
-    m = dp.customer_metrics()
-    overall = dp.overall_over90_ratio(m) * 100
+    overall = dp.overall_over90_ratio() * 100
 
-    g = (
-        m.groupby("법인명")
-        .apply(lambda x: x["연체91일이상잔액_KRW"].sum() / x["총잔액_KRW"].sum() * 100)
-        .reset_index(name="연체율")
-        .sort_values("연체율", ascending=False)
-    )
+    corp = dp.corp_metrics()
+    g = corp.assign(연체율=corp["91일이상비중"] * 100).sort_values("연체율", ascending=False)
 
     fig = px.bar(
         g,
